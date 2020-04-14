@@ -32,13 +32,6 @@
             background-color: beige;
         }
 
-        .errorMessage {
-            margin: 0 auto;
-            overflow: auto;
-            width: 450px;
-            height: 200px;
-        }
-
         .flex_container {
             display: flex;
         }
@@ -88,11 +81,18 @@
     </div>
     <br/>
 
-    <div class="errorMessage">
-        {{#errorMessage}}
-        <p>{{this.message}}</p>
-        {{/errorMessage}}
+    <div id="error" style="visibility: hidden;">
+        {{errorMessage.message}}
     </div>
+    <script>
+        window.onload = function () {
+            let inner = document.getElementById("error").innerHTML.trim();
+            console.log(inner);
+            if (inner.length > 1) {
+                alert(inner);
+            }
+        }
+    </script>
 </div>
 
 <div class="outer_box">

@@ -2,7 +2,6 @@ package chess;
 
 import static spark.Spark.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,13 +15,15 @@ import spark.ModelAndView;
 import spark.template.handlebars.HandlebarsTemplateEngine;
 
 public class WebUIChessApplication {
+	private static ErrorMessage errorMessage;
+
 	public static void main(String[] args) {
 		staticFiles.location("/public");
 		WebService webService = new WebService();
-		List<ErrorMessage> errorMessage = new ArrayList<>();
 
 		get("/", (req, res) -> {
 			Map<String, Object> model = new HashMap<>();
+			errorMessage = null;
 			model.put("blackTeamScore", 0);
 			model.put("whiteTeamScore", 0);
 			model.put("turn", "새 게임 혹은 불러오기를 누르세요!");
@@ -31,6 +32,7 @@ public class WebUIChessApplication {
 
 		get("/start", (req, res) -> {
 			Map<String, Object> model = new HashMap<>();
+			errorMessage = null;
 			webService.initialize();
 			insertIntoModel(webService, errorMessage, model);
 
@@ -39,6 +41,7 @@ public class WebUIChessApplication {
 
 		post("/move", (req, res) -> {
 			Map<String, Object> model = new HashMap<>();
+			errorMessage = null;
 
 			String source = req.queryParams("source");
 			String target = req.queryParams("target");
@@ -46,7 +49,7 @@ public class WebUIChessApplication {
 			try {
 				webService.move(source, target);
 			} catch (InvalidTurnException | InvalidPositionException e) {
-				errorMessage.add(new ErrorMessage(e.getMessage()));
+				errorMessage = new ErrorMessage(e.getMessage());
 			}
 
 			if (webService.isKingDead()) {
@@ -61,6 +64,7 @@ public class WebUIChessApplication {
 
 		post("/save", (req, res) -> {
 			Map<String, Object> model = new HashMap<>();
+			errorMessage = null;
 			webService.clearDb();
 			webService.saveGame();
 
@@ -70,10 +74,11 @@ public class WebUIChessApplication {
 
 		post("/load", (req, res) -> {
 			Map<String, Object> model = new HashMap<>();
+			errorMessage = null;
 			try {
 				webService.loadGame();
 			} catch (EmptyDatabaseException e) {
-				errorMessage.add(new ErrorMessage(EmptyDatabaseException.EMPTY_DATA));
+				errorMessage = new ErrorMessage(EmptyDatabaseException.EMPTY_DATA);
 			}
 
 			insertIntoModel(webService, errorMessage, model);
@@ -81,8 +86,7 @@ public class WebUIChessApplication {
 		});
 	}
 
-	private static void insertIntoModel(WebService webService, List<ErrorMessage> errorMessage,
-		Map<String, Object> model) {
+	private static void insertIntoModel(WebService webService, ErrorMessage errorMessage, Map<String, Object> model) {
 		List<String> pieces = webService.showAllPieces();
 
 		model.put("pieces", pieces);
